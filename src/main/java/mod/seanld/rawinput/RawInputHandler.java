@@ -138,14 +138,7 @@ public class RawInputHandler {
         }
     }
     // GetMouse Entries
-    // For single-player case
-//    @SubscribeEvent
-//    public void  {
-//        setTimer(3);
-//        setShouldGetMouse(true);
-//    }
-
-
+    // TODO: Check if codes below works in single-player case
     // For multiplayer case
     @SubscribeEvent
     public void onClientConnectedToServer(ClientConnectedToServerEvent event) {
