@@ -5,13 +5,12 @@ import net.java.games.input.DirectAndRawInputEnvironmentPlugin;
 import net.java.games.input.Mouse;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.MouseHelper;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
+import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import org.apache.commons.lang3.ArrayUtils;
 
 public class RawInputHandler {
@@ -21,6 +20,8 @@ public class RawInputHandler {
     public static Mouse mouse;
     public static int dx = 0;
     public static int dy = 0;
+
+    public static boolean isTerminated = false;
 
     private int worldJoinTimer;
 
@@ -54,7 +55,7 @@ public class RawInputHandler {
 
     public static void startInputThread() {
         Thread inputThread = new Thread(() -> {
-            while (true) {
+            while (!isTerminated) {
                 if (mouse != null && Minecraft.getMinecraft().currentScreen == null) {
                     mouse.poll();
                     dx += (int) mouse.getX().getPollData();
@@ -76,26 +77,28 @@ public class RawInputHandler {
 
     public static void getMouse() {
         Thread getMouseThread = new Thread(() -> {
-            DirectAndRawInputEnvironmentPlugin directEnv = new DirectAndRawInputEnvironmentPlugin();
-            controllers = directEnv.getControllers();
+            if (!isTerminated) {
+                DirectAndRawInputEnvironmentPlugin directEnv = new DirectAndRawInputEnvironmentPlugin();
+                controllers = directEnv.getControllers();
 
-            mouseControllers = null;
-            mouse = null;
+                mouseControllers = null;
+                mouse = null;
 
-            for (Controller i : controllers) {
-                if (i.getType() == Controller.Type.MOUSE) {
-                    mouseControllers = ArrayUtils.add(mouseControllers, i);
+                for (Controller i : controllers) {
+                    if (i.getType() == Controller.Type.MOUSE) {
+                        mouseControllers = ArrayUtils.add(mouseControllers, i);
+                    }
                 }
-            }
 
-            while (mouse == null) {
-                if (mouseControllers != null) {
-                    for (Controller i : mouseControllers) {
-                        i.poll();
-                        float mouseX = ((Mouse) i).getX().getPollData();
+                while (mouse == null) {
+                    if (mouseControllers != null) {
+                        for (Controller i : mouseControllers) {
+                            i.poll();
+                            float mouseX = ((Mouse) i).getX().getPollData();
 
-                        if (mouseX > 0.1f || mouseX < -0.1f) {
-                            mouse = ((Mouse) i);
+                            if (mouseX > 0.1f || mouseX < -0.1f) {
+                                mouse = ((Mouse) i);
+                            }
                         }
                     }
                 }
@@ -137,6 +140,10 @@ public class RawInputHandler {
     public void onClientConnectedToServer(ClientConnectedToServerEvent event) {
         setTimer(3);
         setShouldGetMouse(true);
+    }
+    @SubscribeEvent
+    public void onClientConnectedToServer(ClientDisconnectionFromServerEvent event) {
+        isTerminated = true;
     }
 }
 
