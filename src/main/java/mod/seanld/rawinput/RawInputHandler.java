@@ -36,7 +36,6 @@ public class RawInputHandler {
         this.worldJoinTimer -= 1;
     }
 
-
     private boolean shouldGetMouse = false;
 
     public boolean getShouldGetMouse() {
@@ -125,8 +124,9 @@ public class RawInputHandler {
     }
     @SubscribeEvent
     public void timer(ClientTickEvent event) {
-        while (getTimer() <= 0) {
+        if (getTimer() > 0) {
             ticTac();
+            return;
         }
         if (getShouldGetMouse()) {
             getMouse();
