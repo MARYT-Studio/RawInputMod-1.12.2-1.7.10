@@ -13,7 +13,7 @@ import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToSe
 import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import org.apache.commons.lang3.ArrayUtils;
 
-@SuppressWarnings({"CallToPrintStackTrace", "BusyWait"})
+@SuppressWarnings({"BusyWait"})
 public class RawInputHandler {
     public static Controller[] controllers;
     public static Controller[] mouseControllers;
@@ -50,13 +50,13 @@ public class RawInputHandler {
 
     public static void init() {
 
-        startInputThread();
+        startInputThread(false);
 
     }
 
-    public static void startInputThread() {
+    public static void startInputThread(boolean manually) {
         Thread inputThread = new Thread(() -> {
-            while (!isTerminated) {
+            do {
                 if (mouse != null && Minecraft.getMinecraft().currentScreen == null) {
                     mouse.poll();
                     dx += (int) mouse.getX().getPollData();
@@ -64,19 +64,19 @@ public class RawInputHandler {
                 } else if (mouse != null) {
                     mouse.poll();
                 }
-
                 try {
                     Thread.sleep(1);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    RawInput.LOGGER.error(e.getStackTrace());
                 }
-            }
+            } while (!isTerminated);
+            RawInput.LOGGER.debug(String.format("Input Thread is terminated. %s-triggered scan is not executed.", manually ? "manually" : "auto"));
         });
         inputThread.setName("inputThread");
         inputThread.start();
     }
 
-    public static void getMouse() {
+    public static void getMouse(boolean manually) {
         Thread getMouseThread = new Thread(() -> {
             if (!isTerminated) {
                 DirectAndRawInputEnvironmentPlugin directEnv = new DirectAndRawInputEnvironmentPlugin();
@@ -103,10 +103,18 @@ public class RawInputHandler {
                         }
                     }
                 }
+            } else {
+                RawInput.LOGGER.debug(String.format("getMouse Thread is terminated. %s-triggered scan is not executed.", manually ? "manually" : "auto"));
             }
         });
         getMouseThread.setName("getMouseThread");
         getMouseThread.start();
+    }
+
+    public static void getMouseManually() {
+        isTerminated = false;
+        getMouse(true);
+        RawInput.LOGGER.debug("Restart RawInput's threads for player manually rescan.");
     }
 
     public static void toggleRawInput() {
@@ -133,7 +141,7 @@ public class RawInputHandler {
             return;
         }
         if (getShouldGetMouse()) {
-            getMouse();
+            getMouse(false);
             setShouldGetMouse(false);
         }
     }
@@ -148,6 +156,7 @@ public class RawInputHandler {
     @SubscribeEvent
     public void onClientDisconnectionFromServer(ClientDisconnectionFromServerEvent event) {
         isTerminated = true;
+        RawInput.LOGGER.debug("Terminate RawInput's threads for player disconnection from server.");
     }
 }
 

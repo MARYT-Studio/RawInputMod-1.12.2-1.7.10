@@ -21,7 +21,7 @@ public class RescanCommand extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		RawInputHandler.getMouse();
+		RawInputHandler.getMouseManually();
 		Minecraft.getMinecraft().player.sendMessage(new TextComponentString("Rescanned!"));
 	}
 	@Override

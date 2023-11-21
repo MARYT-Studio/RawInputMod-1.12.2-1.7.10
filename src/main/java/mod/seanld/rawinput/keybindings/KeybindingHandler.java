@@ -1,4 +1,4 @@
-package mod.seanld.rawinput.keybinds;
+package mod.seanld.rawinput.keybindings;
 
 import mod.seanld.rawinput.RawInputHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -7,7 +7,7 @@ import org.lwjgl.input.Keyboard;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 
-public class KeybindHandler {
+public class KeybindingHandler {
 
     public static KeyBinding toggleKey;
     public static KeyBinding rescanKey;
@@ -27,7 +27,7 @@ public class KeybindHandler {
         }
 
         if (rescanKey.isPressed()) {
-            RawInputHandler.getMouse();
+            RawInputHandler.getMouseManually();
         }
     }
 }

@@ -2,7 +2,7 @@ package mod.seanld.rawinput;
 
 import mod.seanld.rawinput.commands.RescanCommand;
 import mod.seanld.rawinput.commands.ToggleCommand;
-import mod.seanld.rawinput.keybinds.KeybindHandler;
+import mod.seanld.rawinput.keybindings.KeybindingHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,7 +20,7 @@ public class RawInput
 {
     public static final String MODID = "rawinput";
 	public static final String NAME = "Raw Mouse Input";
-    public static final String VERSION = "1.4.2";
+    public static final String VERSION = "1.5.4";
 	public static final Logger LOGGER = LogManager.getLogger(NAME);
 
 
@@ -30,7 +30,7 @@ public class RawInput
 		ClientCommandHandler.instance.registerCommand(new RescanCommand());
 		ClientCommandHandler.instance.registerCommand(new ToggleCommand());
 		Minecraft.getMinecraft().mouseHelper = new RawMouseHelper();
-		MinecraftForge.EVENT_BUS.register(new KeybindHandler());
+		MinecraftForge.EVENT_BUS.register(new KeybindingHandler());
 		MinecraftForge.EVENT_BUS.register(new RawInputHandler());
 
 		RawInputHandler.init();
@@ -39,6 +39,6 @@ public class RawInput
 	@SideOnly(Side.CLIENT)
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
-		KeybindHandler.init();
+		KeybindingHandler.init();
 	}
 }
