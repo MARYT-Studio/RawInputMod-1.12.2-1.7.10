@@ -7,10 +7,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.util.MouseHelper;
 import net.minecraft.util.text.TextComponentString;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientConnectedToServerEvent;
-import net.minecraftforge.fml.common.network.FMLNetworkEvent.ClientDisconnectionFromServerEvent;
 import org.apache.commons.lang3.ArrayUtils;
 
 @SuppressWarnings({"BusyWait"})
@@ -22,31 +18,9 @@ public class RawInputHandler {
     public static int dx = 0;
     public static int dy = 0;
 
-    public static boolean isTerminated = false;
+    public static int worldJoinTimer;
 
-    private int worldJoinTimer;
-
-    public int getTimer() {
-        return worldJoinTimer;
-    }
-
-    public void setTimer(int timer) {
-        this.worldJoinTimer = timer;
-    }
-
-    public void ticTac() {
-        this.worldJoinTimer -= 1;
-    }
-
-    private boolean shouldGetMouse = false;
-
-    public boolean getShouldGetMouse() {
-        return shouldGetMouse;
-    }
-
-    public void setShouldGetMouse(boolean shouldGetMouse) {
-        this.shouldGetMouse = shouldGetMouse;
-    }
+    public static boolean shouldGetMouse = true;
 
     public static void init() {
 
@@ -69,7 +43,7 @@ public class RawInputHandler {
                 } catch (InterruptedException e) {
                     RawInput.LOGGER.error(e.getStackTrace());
                 }
-            } while (!isTerminated);
+            } while (shouldGetMouse);
             RawInput.LOGGER.debug(String.format("Input Thread is terminated. %s-triggered scan is not executed.", manually ? "manually" : "auto"));
         });
         inputThread.setName("inputThread");
@@ -78,7 +52,7 @@ public class RawInputHandler {
 
     public static void getMouse(boolean manually) {
         Thread getMouseThread = new Thread(() -> {
-            if (!isTerminated) {
+            if (shouldGetMouse) {
                 DirectAndRawInputEnvironmentPlugin directEnv = new DirectAndRawInputEnvironmentPlugin();
                 controllers = directEnv.getControllers();
 
@@ -112,9 +86,8 @@ public class RawInputHandler {
     }
 
     public static void getMouseManually() {
-        isTerminated = false;
+        shouldGetMouse = true;
         getMouse(true);
-        RawInput.LOGGER.debug("Restart RawInput's threads for player manually rescan.");
     }
 
     public static void toggleRawInput() {
@@ -133,30 +106,6 @@ public class RawInputHandler {
         }
         player.rotationYaw = saveYaw;
         player.rotationPitch = savePitch;
-    }
-    @SubscribeEvent
-    public void timer(ClientTickEvent event) {
-        if (getTimer() > 0) {
-            ticTac();
-            return;
-        }
-        if (getShouldGetMouse()) {
-            getMouse(false);
-            setShouldGetMouse(false);
-        }
-    }
-    // GetMouse Entries
-    // TODO: Check if codes below works in single-player case
-    // For multiplayer case
-    @SubscribeEvent
-    public void onClientConnectedToServer(ClientConnectedToServerEvent event) {
-        setTimer(3);
-        setShouldGetMouse(true);
-    }
-    @SubscribeEvent
-    public void onClientDisconnectionFromServer(ClientDisconnectionFromServerEvent event) {
-        isTerminated = true;
-        RawInput.LOGGER.debug("Terminate RawInput's threads for player disconnection from server.");
     }
 }
 

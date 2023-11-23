@@ -2,6 +2,8 @@ package mod.seanld.rawinput;
 
 import mod.seanld.rawinput.commands.RescanCommand;
 import mod.seanld.rawinput.commands.ToggleCommand;
+import mod.seanld.rawinput.events.Client2ServerEvents;
+import mod.seanld.rawinput.events.ClientTickEvent;
 import mod.seanld.rawinput.keybindings.KeybindingHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -31,8 +33,8 @@ public class RawInput
 		ClientCommandHandler.instance.registerCommand(new ToggleCommand());
 		Minecraft.getMinecraft().mouseHelper = new RawMouseHelper();
 		MinecraftForge.EVENT_BUS.register(new KeybindingHandler());
-		MinecraftForge.EVENT_BUS.register(new RawInputHandler());
-
+//		MinecraftForge.EVENT_BUS.register(new Client2ServerEvents());
+		MinecraftForge.EVENT_BUS.register(new ClientTickEvent());
 		RawInputHandler.init();
     }
 
